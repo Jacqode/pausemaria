@@ -12,7 +12,7 @@
   <button id="activity-btn">Få aktivitet</button>
   <div id="activity-box"></div>
 
-  <h2>Data (antal pauser pr. kvarter)</h2>
+  <h2>Data (antal pauser pr. minut)</h2>
   <pre id="data-output"></pre>
 
   <script>
@@ -25,18 +25,19 @@
     const STORAGE_KEY = "pausemaria_clicks";
     let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
+    // NY: grupperer efter minut med 0-padding
     function getCurrentMinute() {
       const now = new Date();
-      const hour = now.getHours();
-      const minute = now.getMinutes();
+      const hour = String(now.getHours()).padStart(2, "0");
+      const minute = String(now.getMinutes()).padStart(2, "0");
       return `${hour}:${minute}`;
     }
 
     function renderData() {
       const output = document.getElementById("data-output");
       let text = "";
-      for (const quarter in data) {
-        text += `${quarter}: ${data[quarter]} pauser\n`;
+      for (const minute in data) {
+        text += `${minute}: ${data[minute]} pauser\n`;
       }
       output.textContent = text || "Ingen data endnu.";
     }
@@ -45,17 +46,19 @@
       const random = activities[Math.floor(Math.random() * activities.length)];
       document.getElementById("activity-box").textContent = random;
 
-      const q = getCurrentQuarter();
-      data[q] = (data[q] || 0) + 1;
+      // NY: korrekt funktion
+      const m = getCurrentMinute();
+      data[m] = (data[m] || 0) + 1;
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       renderData();
+      drawChart();
     };
 
     renderData();
   </script>
 
-<h2>Seriediagram (antal pauser pr. kvarter)</h2>
+<h2>Seriediagram (antal pauser pr. minut)</h2>
 <canvas id="chart" width="400" height="200"></canvas>
 
 <script>
@@ -65,11 +68,12 @@
 
     const raw = JSON.parse(localStorage.getItem("pausemaria_clicks")) || {};
 
-    // SORTERING (vigtig)
+    // NY: labels sorteres korrekt (fordi de er 00:00-format)
     const labels = Object.keys(raw).sort();
     const values = labels.map(k => raw[k]);
 
     if (labels.length === 0) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillText("Ingen data endnu", 10, 20);
       return;
     }
@@ -86,6 +90,7 @@
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Akser
     ctx.beginPath();
     ctx.moveTo(left, top);
     ctx.lineTo(left, top + height);
@@ -94,6 +99,7 @@
 
     const step = width / (values.length - 1);
 
+    // Serie
     ctx.beginPath();
     values.forEach((v, i) => {
       const x = left + i * step;
@@ -106,6 +112,7 @@
     });
     ctx.stroke();
 
+    // Værdier under punkter
     ctx.font = "10px sans-serif";
     values.forEach((v, i) => {
       const x = left + i * step;
@@ -115,7 +122,6 @@
   }
 
   drawChart();
-  document.getElementById("activity-btn").addEventListener("click", drawChart);
 </script>
 
 </body>
