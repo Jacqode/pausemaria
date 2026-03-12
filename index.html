@@ -25,7 +25,6 @@
     const STORAGE_KEY = "pausemaria_clicks";
     let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
-    // NY: grupperer efter minut med 0-padding
     function getCurrentMinute() {
       const now = new Date();
       const hour = String(now.getHours()).padStart(2, "0");
@@ -46,13 +45,13 @@
       const random = activities[Math.floor(Math.random() * activities.length)];
       document.getElementById("activity-box").textContent = random;
 
-      // NY: korrekt funktion
       const m = getCurrentMinute();
       data[m] = (data[m] || 0) + 1;
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       renderData();
       drawChart();
+      updateInterpretation();
     };
 
     renderData();
@@ -61,24 +60,75 @@
 <h2>Seriediagram (antal pauser pr. minut)</h2>
 <canvas id="chart" width="400" height="200"></canvas>
 
+<h2>Fortolkning</h2>
+<pre id="interpretation"></pre>
+
 <script>
+  function median(values) {
+    if (values.length === 0) return 0;
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 !== 0
+      ? sorted[mid]
+      : (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+
+  function countRuns(values, med) {
+    let runs = 1;
+    for (let i = 1; i < values.length; i++) {
+      const prevAbove = values[i - 1] > med;
+      const currAbove = values[i] > med;
+      if (prevAbove !== currAbove) runs++;
+    }
+    return runs;
+  }
+
+  function updateInterpretation() {
+    const raw = JSON.parse(localStorage.getItem("pausemaria_clicks")) || {};
+    const labels = Object.keys(raw).sort();
+    const values = labels.map(k => raw[k]);
+
+    if (values.length < 2) {
+      document.getElementById("interpretation").textContent =
+        "For få datapunkter til fortolkning.";
+      return;
+    }
+
+    const med = median(values);
+    const runs = countRuns(values, med);
+
+    let text = "";
+    text += `Median: ${med}\n`;
+    text += `Antal runs: ${runs}\n\n`;
+
+    if (runs <= 2) {
+      text += "Fortolkning: Mulig special cause variation (for få runs).";
+    } else if (runs >= values.length - 1) {
+      text += "Fortolkning: Mulig trend eller systematisk ændring.";
+    } else {
+      text += "Fortolkning: Stabil proces uden tegn på special cause.";
+    }
+
+    document.getElementById("interpretation").textContent = text;
+  }
+
   function drawChart() {
     const canvas = document.getElementById("chart");
     const ctx = canvas.getContext("2d");
 
     const raw = JSON.parse(localStorage.getItem("pausemaria_clicks")) || {};
-
-    // NY: labels sorteres korrekt (fordi de er 00:00-format)
     const labels = Object.keys(raw).sort();
     const values = labels.map(k => raw[k]);
 
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
     if (labels.length === 0) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillText("Ingen data endnu", 10, 20);
       return;
     }
 
     const max = Math.max(...values);
+    const med = median(values);
 
     const left = 40;
     const bottom = 20;
@@ -87,8 +137,6 @@
 
     const width = canvas.width - left - right;
     const height = canvas.height - top - bottom;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Akser
     ctx.beginPath();
@@ -112,6 +160,15 @@
     });
     ctx.stroke();
 
+    // Medianlinje
+    const medY = top + height - (med / max) * height;
+    ctx.beginPath();
+    ctx.moveTo(left, medY);
+    ctx.lineTo(left + width, medY);
+    ctx.strokeStyle = "red";
+    ctx.stroke();
+    ctx.strokeStyle = "black";
+
     // Værdier under punkter
     ctx.font = "10px sans-serif";
     values.forEach((v, i) => {
@@ -122,7 +179,11 @@
   }
 
   drawChart();
+  updateInterpretation();
 </script>
 
-</body>
-</html>
+<h2>Forbedringsmodel – kort manual</h2>
+<pre>
+Et seriediagram viser data over tid og bruges til at skelne mellem:
+- Common cause variation (normal variation)
+- Special cause variation (noget er ændret
