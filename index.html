@@ -16,18 +16,15 @@
   <pre id="data-output"></pre>
 
   <script>
-    // Hardcoded aktiviteter
     const activities = [
       "Stræk armene over hovedet 🙆‍♂️",
       "Tag 10 dybe vejrtrækninger 🌬️",
       "Gå en hurtig tur 🚶‍♂️"
     ];
 
-    // Klikdata gemmes i localStorage så de overlever reload
     const STORAGE_KEY = "pausemaria_clicks";
     let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
-    // Hjælpefunktion: find nuværende kvarter som tekst
     function getCurrentQuarter() {
       const now = new Date();
       const hour = now.getHours();
@@ -36,7 +33,6 @@
       return `${hour}:${quarter * 15}-${hour}:${quarter * 15 + 15}`;
     }
 
-    // Opdater visning af data
     function renderData() {
       const output = document.getElementById("data-output");
       let text = "";
@@ -46,27 +42,82 @@
       output.textContent = text || "Ingen data endnu.";
     }
 
-    // Klik på knappen
     document.getElementById("activity-btn").onclick = () => {
-      // Vis aktivitet
       const random = activities[Math.floor(Math.random() * activities.length)];
       document.getElementById("activity-box").textContent = random;
 
-      // Registrér klik i nuværende kvarter
       const q = getCurrentQuarter();
       data[q] = (data[q] || 0) + 1;
 
-      // Gem i localStorage
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-
-      // Opdater visning
       renderData();
     };
 
-    // Vis data ved load
     renderData();
   </script>
 
+<h2>Seriediagram (antal pauser pr. kvarter)</h2>
+<canvas id="chart" width="400" height="200"></canvas>
+
+<script>
+  function drawChart() {
+    const canvas = document.getElementById("chart");
+    const ctx = canvas.getContext("2d");
+
+    const raw = JSON.parse(localStorage.getItem("pausemaria_clicks")) || {};
+
+    // SORTERING (vigtig)
+    const labels = Object.keys(raw).sort();
+    const values = labels.map(k => raw[k]);
+
+    if (labels.length === 0) {
+      ctx.fillText("Ingen data endnu", 10, 20);
+      return;
+    }
+
+    const max = Math.max(...values);
+
+    const left = 40;
+    const bottom = 20;
+    const top = 10;
+    const right = 10;
+
+    const width = canvas.width - left - right;
+    const height = canvas.height - top - bottom;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.beginPath();
+    ctx.moveTo(left, top);
+    ctx.lineTo(left, top + height);
+    ctx.lineTo(left + width, top + height);
+    ctx.stroke();
+
+    const step = width / (values.length - 1);
+
+    ctx.beginPath();
+    values.forEach((v, i) => {
+      const x = left + i * step;
+      const y = top + height - (v / max) * height;
+
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+
+      ctx.fillRect(x - 2, y - 2, 4, 4);
+    });
+    ctx.stroke();
+
+    ctx.font = "10px sans-serif";
+    values.forEach((v, i) => {
+      const x = left + i * step;
+      const y = top + height + 12;
+      ctx.fillText(v, x - 3, y);
+    });
+  }
+
+  drawChart();
+  document.getElementById("activity-btn").addEventListener("click", drawChart);
+</script>
+
 </body>
 </html>
-
