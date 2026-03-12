@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <title>PauseMaria</title>
+  <style>
+    body { font-family: sans-serif; padding: 40px; }
+    #activity-box { margin-top: 20px; font-size: 1.4rem; }
+  </style>
+</head>
+<body>
+
+  <h1>PauseMaria</h1>
+  <p>Klik for at få en lille pauseaktivitet.</p>
+
+  <button id="activity-btn">Få aktivitet</button>
+  <div id="activity-box"></div>
+
+  <script>
+    const activities = [
+      "Stræk armene over hovedet 🙆‍♂️",
+      "Tag 10 dybe vejrtrækninger 🌬️",
+      "Gå en hurtig tur 🚶‍♂️"
+    ];
+
+    document.getElementById("activity-btn").onclick = () => {
+      const random = activities[Math.floor(Math.random() * activities.length)];
+      document.getElementById("activity-box").textContent = random;
+    };
+  </script>
+
+</body>
+</html>
