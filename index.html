@@ -6,12 +6,33 @@
 </head>
 <body>
 
-  <h1>PauseMaria</h1>
+  <!-- 1. STRATEGIPROCES -->
+  <h1>1. Strategiproces</h1>
+  <p>Overordnet ramme for arbejdet med strategi og forbedringer.</p>
+
+  <!-- 2. STRATEGIANALYSE -->
+  <h1>2. Strategianalyse</h1>
+  <p>Analyse af nuværende situation, data og behov.</p>
+
+  <!-- 3. STRATEGIUDVIKLING -->
+  <h1>3. Strategiudvikling</h1>
+  <p>Udvikling af mål, retning og indsatsområder.</p>
+
+  <!-- 4. FORBEREDELSE AF STRATEGIIMPLEMENTERING -->
+  <h1>4. Forberedelse af strategiimplementering</h1>
+  <p>Planlægning af hvordan strategien skal føres ud i livet.</p>
+
+  <!-- 5. STRATEGIIMPLEMENTERING (HERUNDER PAUSEMARIA) -->
+  <h1>5. Strategiimplementering</h1>
+  <p>Herunder PauseMaria – et værktøj til at understøtte pauser og trivsel.</p>
+
+  <h2>PauseMaria</h2>
   <p>Klik for at få en lille pauseaktivitet.</p>
 
   <button id="activity-btn">Få aktivitet</button>
   <div id="activity-box"></div>
 
+  <!-- DATASEKTION -->
   <h2>Data (antal pauser pr. minut)</h2>
   <pre id="data-output"></pre>
 
@@ -57,145 +78,17 @@
     renderData();
   </script>
 
-<h2>Seriediagram (antal pauser pr. minut)</h2>
-<canvas id="chart" width="400" height="200"></canvas>
+  <!-- 6. EVALUERING AF STRATEGI OG IMPLEMENTERING -->
+  <h1>6. Evaluering af strategi og implementering</h1>
+  <p>Herunder analyse af PauseMaria‑data, seriediagram, median, runs og fortolkning.</p>
 
-<h2>Fortolkning</h2>
-<pre id="interpretation"></pre>
+  <h2>Seriediagram (antal pauser pr. minut)</h2>
+  <canvas id="chart" width="400" height="200"></canvas>
+
+  <h2>Fortolkning</h2>
+  <pre id="interpretation"></pre>
 
 <script>
   function median(values) {
     if (values.length === 0) return 0;
-    const sorted = [...values].sort((a, b) => a - b);
-    const mid = Math.floor(sorted.length / 2);
-    return sorted.length % 2 !== 0
-      ? sorted[mid]
-      : (sorted[mid - 1] + sorted[mid]) / 2;
-  }
-
-  function countRuns(values, med) {
-    let runs = 1;
-    for (let i = 1; i < values.length; i++) {
-      const prevAbove = values[i - 1] > med;
-      const currAbove = values[i] > med;
-      if (prevAbove !== currAbove) runs++;
-    }
-    return runs;
-  }
-
-  function updateInterpretation() {
-    const raw = JSON.parse(localStorage.getItem("pausemaria_clicks")) || {};
-    const labels = Object.keys(raw).sort();
-    const values = labels.map(k => raw[k]);
-
-    if (values.length < 2) {
-      document.getElementById("interpretation").textContent =
-        "For få datapunkter til fortolkning.";
-      return;
-    }
-
-    const med = median(values);
-    const runs = countRuns(values, med);
-
-    let text = "";
-    text += `Median: ${med}\n`;
-    text += `Antal runs: ${runs}\n\n`;
-
-    if (runs <= 2) {
-      text += "Fortolkning: Mulig special cause variation (for få runs).";
-    } else if (runs >= values.length - 1) {
-      text += "Fortolkning: Mulig trend eller systematisk ændring.";
-    } else {
-      text += "Fortolkning: Stabil proces uden tegn på special cause.";
-    }
-
-    document.getElementById("interpretation").textContent = text;
-  }
-
-  function drawChart() {
-    const canvas = document.getElementById("chart");
-    const ctx = canvas.getContext("2d");
-
-    const raw = JSON.parse(localStorage.getItem("pausemaria_clicks")) || {};
-    const labels = Object.keys(raw).sort();
-    const values = labels.map(k => raw[k]);
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (labels.length === 0) {
-      ctx.fillText("Ingen data endnu", 10, 20);
-      return;
-    }
-
-    const max = Math.max(...values);
-    const med = median(values);
-
-    const left = 40;
-    const bottom = 20;
-    const top = 10;
-    const right = 10;
-
-    const width = canvas.width - left - right;
-    const height = canvas.height - top - bottom;
-
-    // Akser
-    ctx.beginPath();
-    ctx.moveTo(left, top);
-    ctx.lineTo(left, top + height);
-    ctx.lineTo(left + width, top + height);
-    ctx.stroke();
-
-    const step = width / (values.length - 1);
-
-    // Serie
-    ctx.beginPath();
-    values.forEach((v, i) => {
-      const x = left + i * step;
-      const y = top + height - (v / max) * height;
-
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
-
-      ctx.fillRect(x - 2, y - 2, 4, 4);
-    });
-    ctx.stroke();
-
-    // Medianlinje
-    const medY = top + height - (med / max) * height;
-    ctx.beginPath();
-    ctx.moveTo(left, medY);
-    ctx.lineTo(left + width, medY);
-    ctx.strokeStyle = "red";
-    ctx.stroke();
-    ctx.strokeStyle = "black";
-
-    // Værdier under punkter
-    ctx.font = "10px sans-serif";
-    values.forEach((v, i) => {
-      const x = left + i * step;
-      const y = top + height + 12;
-      ctx.fillText(v, x - 3, y);
-    });
-  }
-
-  drawChart();
-  updateInterpretation();
-</script>
-
-<h2>Forbedringsmodel – kort manual</h2>
-<pre>
-Et seriediagram viser data over tid og bruges til at skelne mellem:
-- Common cause variation (normal variation)
-- Special cause variation (noget er ændret)
-
-Nøgleværktøjer:
-- Medianlinje: stabil reference
-- Runs: antal gange serien krydser medianen
-- Fortolkning:
-  - Få runs → special cause
-  - Mange runs → trend
-  - Normal mængde runs → stabil proces
-</pre>
-
-</body>
-</html>
+    const sorted = [...values].sort((a,
