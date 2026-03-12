@@ -25,12 +25,11 @@
     const STORAGE_KEY = "pausemaria_clicks";
     let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
 
-    function getCurrentQuarter() {
+    function getCurrentMinute() {
       const now = new Date();
       const hour = now.getHours();
       const minute = now.getMinutes();
-      const quarter = Math.floor(minute / 15);
-      return `${hour}:${quarter * 15}-${hour}:${quarter * 15 + 15}`;
+      return `${hour}:${minute}`;
     }
 
     function renderData() {
