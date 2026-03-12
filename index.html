@@ -3,10 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>PauseMaria</title>
-  <style>
-    body { font-family: sans-serif; padding: 40px; }
-    #activity-box { margin-top: 20px; font-size: 1.4rem; }
-  </style>
 </head>
 <body>
 
@@ -16,18 +12,61 @@
   <button id="activity-btn">Få aktivitet</button>
   <div id="activity-box"></div>
 
+  <h2>Data (antal pauser pr. kvarter)</h2>
+  <pre id="data-output"></pre>
+
   <script>
+    // Hardcoded aktiviteter
     const activities = [
       "Stræk armene over hovedet 🙆‍♂️",
       "Tag 10 dybe vejrtrækninger 🌬️",
       "Gå en hurtig tur 🚶‍♂️"
     ];
 
+    // Klikdata gemmes i localStorage så de overlever reload
+    const STORAGE_KEY = "pausemaria_clicks";
+    let data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+
+    // Hjælpefunktion: find nuværende kvarter som tekst
+    function getCurrentQuarter() {
+      const now = new Date();
+      const hour = now.getHours();
+      const minute = now.getMinutes();
+      const quarter = Math.floor(minute / 15);
+      return `${hour}:${quarter * 15}-${hour}:${quarter * 15 + 15}`;
+    }
+
+    // Opdater visning af data
+    function renderData() {
+      const output = document.getElementById("data-output");
+      let text = "";
+      for (const quarter in data) {
+        text += `${quarter}: ${data[quarter]} pauser\n`;
+      }
+      output.textContent = text || "Ingen data endnu.";
+    }
+
+    // Klik på knappen
     document.getElementById("activity-btn").onclick = () => {
+      // Vis aktivitet
       const random = activities[Math.floor(Math.random() * activities.length)];
       document.getElementById("activity-box").textContent = random;
+
+      // Registrér klik i nuværende kvarter
+      const q = getCurrentQuarter();
+      data[q] = (data[q] || 0) + 1;
+
+      // Gem i localStorage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+      // Opdater visning
+      renderData();
     };
+
+    // Vis data ved load
+    renderData();
   </script>
 
 </body>
 </html>
+
