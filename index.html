@@ -17,8 +17,9 @@
   <h1>1. Strategiproces</h1>
   <p>Overordnet ramme for arbejdet med strategi og forbedringer.</p>
   <img src="aarshjul.png" alt="Årshjul for strategiarbejdet og trivselsinitiativer" width="300">
-<!-- #endregion 1. STRATEGIPROCES -->
-  <!-- 2. STRATEGIANALYSE -->
+  <!-- #endregion 1. STRATEGIPROCES -->
+
+  <!-- #region 2. STRATEGIANALYSE -->
   <h1>2. Strategianalyse</h1>
   <p>Analyse af nuværende situation, data og behov.</p>
   
@@ -37,9 +38,128 @@
         <td><ul><li></li><li></li><li></li></ul></td>
       </tr>
     </table>
+    <!-- #region 2. STRATEGIANALYSE -->
 
-  <!-- 3. STRATEGIUDVIKLING -->
+  <!-- #region 3. STRATEGIUDVIKLING -->
   <h1>3. Strategiudvikling</h1>
+
+          <!-- #region TOWS dynamisk -->
+        <section id="tows-dynamic">
+            <h2>TOWS-matrix (dynamisk)</h2>
+
+            <h3>Input</h3>
+            <p>Interne styrker/svagheder (7P) og eksterne faktorer (PESTEL + konkurrence).</p>
+
+            <table border="1" cellpadding="6" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Navn</th>
+                        <th>Score / Klassifikation</th>
+                    </tr>
+                </thead>
+                <tbody id="tows-internal"></tbody>
+            </table>
+
+            <br>
+
+            <table border="1" cellpadding="6" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Faktor</th>
+                        <th>Type</th>
+                    </tr>
+                </thead>
+                <tbody id="tows-external"></tbody>
+            </table>
+
+            <h3>Genererede strategier</h3>
+            <h4>SO-strategier (Styrker + Muligheder)</h4>
+            <ul id="tows-so"></ul>
+
+            <h4>WO-strategier (Svagheder + Muligheder)</h4>
+            <ul id="tows-wo"></ul>
+        </section>
+
+        <script>
+            const internalFactors = [
+                { name: "Product",  score: 1.0 },
+                { name: "Price",    score: 3.0 },
+                { name: "Place",    score: 2.0 },
+                { name: "Promotion",score: 1.0 },
+                { name: "People",   score: 4.0 },
+                { name: "Process",  score: 1.0 },
+                { name: "Other",    score: 1.0 }
+            ];
+
+            const externalFactors = [
+                { name: "Competition",     type: "Opportunity" },
+                { name: "Political",       type: "Opportunity" },
+                { name: "Social-Cultural", type: "Opportunity" },
+                { name: "Technological",   type: "Opportunity" }
+            ];
+
+            function classifyInternal(score) {
+                if (score >= 3) return "Strength";
+                if (score <= 2) return "Weakness";
+                return "Neutral";
+            }
+
+            function renderTOWS() {
+                const internalBody = document.getElementById("tows-internal");
+                const externalBody = document.getElementById("tows-external");
+                const soList = document.getElementById("tows-so");
+                const woList = document.getElementById("tows-wo");
+
+                internalBody.innerHTML = "";
+                externalBody.innerHTML = "";
+                soList.innerHTML = "";
+                woList.innerHTML = "";
+
+                internalFactors.forEach(f => {
+                    const tr = document.createElement("tr");
+                    const type = classifyInternal(f.score);
+                    tr.innerHTML = `
+                        <td>${type}</td>
+                        <td>${f.name}</td>
+                        <td>${f.score.toFixed(1)}</td>
+                    `;
+                    internalBody.appendChild(tr);
+                });
+
+                externalFactors.forEach(f => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${f.name}</td>
+                        <td>${f.type}</td>
+                    `;
+                    externalBody.appendChild(tr);
+                });
+
+                const strengths = internalFactors.filter(f => classifyInternal(f.score) === "Strength");
+                const weaknesses = internalFactors.filter(f => classifyInternal(f.score) === "Weakness");
+                const opportunities = externalFactors.filter(f => f.type === "Opportunity");
+
+                strengths.forEach(s => {
+                    opportunities.forEach(o => {
+                        const li = document.createElement("li");
+                        li.textContent = `Udnyt styrken "${s.name}" til at udnytte "${o.name}"-muligheden.`;
+                        soList.appendChild(li);
+                    });
+                });
+
+                weaknesses.forEach(w => {
+                    opportunities.forEach(o => {
+                        const li = document.createElement("li");
+                        li.textContent = `Reducer svagheden "${w.name}" for bedre at kunne udnytte "${o.name}"-muligheden.`;
+                        woList.appendChild(li);
+                    });
+                });
+            }
+
+            document.addEventListener("DOMContentLoaded", renderTOWS);
+        </script>
+        <!-- #endregion TOWS dynamisk -->
 
     
   <h2>Test af strategi mod SWOT</h2>
@@ -74,7 +194,7 @@
       <td></td>
     </tr>
   </table>
-
+  <!-- #endregion 3. STRATEGIUDVIKLING -->
 
   <h2>Test af strategi mod interessenter</h2>
   <p>Vurder hvordan hver interessentgruppe forventes at reagere på de enkelte strategipunkter.</p>
