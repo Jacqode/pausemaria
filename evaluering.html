@@ -8,105 +8,173 @@
     body { font-family: Arial; margin: 20px; line-height: 1.5; }
     h1 { color: blue; margin-top: 40px; }
     h2 { margin-top: 25px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-    td, th { border: 1px solid #ccc; padding: 8px; }
-    th { background: #f3f3f3; }
+    pre { background: #f7f7f7; padding: 10px; }
   </style>
 </head>
 
 <body>
 
-<!-- #region 6. EVALUERING -->
+<!-- 6. EVALUERING AF STRATEGI OG IMPLEMENTERING -->
 <h1>6. Evaluering af strategi og implementering</h1>
 <p>Herunder analyse af PauseMaria‑data, seriediagram, median, runs og fortolkning.</p>
 
 <h2>Data (antal pauser pr. minut)</h2>
-<ul id="pm-data-list">
-  <!-- Data indsættes dynamisk fra localStorage -->
-</ul>
+<pre id="data-output"></pre>
 
 <h2>Seriediagram (antal pauser pr. minut)</h2>
-<pre id="pm-chart"></pre>
+<canvas id="chart" width="400" height="200"></canvas>
 
 <h2>Fortolkning</h2>
-<p>Median: <span id="pm-median"></span></p>
-<p>Antal runs: <span id="pm-runs"></span></p>
-<p>Fortolkning: <span id="pm-interpretation"></span></p>
-
-<h2>Forbedringsmodel – kort manual</h2>
-<p>
-Et seriediagram viser data over tid og bruges til at skelne mellem:
-</p>
-<ul>
-  <li>Common cause variation (normal variation)</li>
-  <li>Special cause variation (noget er ændret)</li>
-</ul>
-
-<p>Nøgleværktøjer:</p>
-<ul>
-  <li>Medianlinje: stabil reference</li>
-  <li>Runs: antal gange serien krydser medianen</li>
-  <li>Fortolkning:
-    <ul>
-      <li>Få runs → special cause</li>
-      <li>Mange runs → trend</li>
-      <li>Normal mængde runs → stabil proces</li>
-    </ul>
-  </li>
-</ul>
+<pre id="interpretation"></pre>
 
 <script>
-// Hent data fra localStorage
-const pmPauser = JSON.parse(localStorage.getItem("pmPauser") || "[]");
+  const STORAGE_KEY = "pausemaria_clicks";
 
-// Vis rå data
-const list = document.getElementById("pm-data-list");
-pmPauser.forEach(ts => {
-  const li = document.createElement("li");
-  li.textContent = new Date(ts).toLocaleTimeString("da-DK") + ": 1 pause";
-  list.appendChild(li);
-});
+  function renderData() {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    const output = document.getElementById("data-output");
 
-// Beregn median
-function median(values) {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((a,b) => a-b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 !== 0
-    ? sorted[mid]
-    : (sorted[mid - 1] + sorted[mid]) / 2;
-}
-
-// Lav seriediagram (simpelt tekstdiagram)
-const chart = document.getElementById("pm-chart");
-chart.textContent = pmPauser.map((v,i) => `${i+1}: ${v}`).join("\n");
-
-// Median
-document.getElementById("pm-median").textContent = median(pmPauser);
-
-// Runs
-function countRuns(values) {
-  if (values.length < 2) return 1;
-  let m = median(values);
-  let runs = 1;
-  for (let i = 1; i < values.length; i++) {
-    if ((values[i] > m) !== (values[i-1] > m)) runs++;
+    let text = "";
+    for (const minute in raw) {
+      text += `${minute}: ${raw[minute]} pauser\n`;
+    }
+    output.textContent = text || "Ingen data endnu.";
   }
-  return runs;
-}
 
-const runs = countRuns(pmPauser);
-document.getElementById("pm-runs").textContent = runs;
+  function median(values) {
+    if (values.length === 0) return 0;
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 !== 0
+      ? sorted[mid]
+      : (sorted[mid - 1] + sorted[mid]) / 2;
+  }
 
-// Fortolkning
-let interpretation = "Stabil proces uden tegn på special cause.";
-if (runs < 3) interpretation = "Mulig special cause – få runs.";
-if (runs > 10) interpretation = "Trend – mange runs.";
+  function countRuns(values, med) {
+    let runs = 1;
+    for (let i = 1; i < values.length; i++) {
+      const prevAbove = values[i - 1] > med;
+      const currAbove = values[i] > med;
+      if (prevAbove !== currAbove) runs++;
+    }
+    return runs;
+  }
 
-document.getElementById("pm-interpretation").textContent = interpretation;
+  function updateInterpretation() {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    const labels = Object.keys(raw).sort();
+    const values = labels.map(k => raw[k]);
+
+    if (values.length < 2) {
+      document.getElementById("interpretation").textContent =
+        "For få datapunkter til fortolkning.";
+      return;
+    }
+
+    const med = median(values);
+    const runs = countRuns(values, med);
+
+    let text = "";
+    text += `Median: ${med}\n`;
+    text += `Antal runs: ${runs}\n\n`;
+
+    if (runs <= 2) {
+      text += "Fortolkning: Mulig special cause variation (for få runs).";
+    } else if (runs >= values.length - 1) {
+      text += "Fortolkning: Mulig trend eller systematisk ændring.";
+    } else {
+      text += "Fortolkning: Stabil proces uden tegn på special cause.";
+    }
+
+    document.getElementById("interpretation").textContent = text;
+  }
+
+  function drawChart() {
+    const canvas = document.getElementById("chart");
+    const ctx = canvas.getContext("2d");
+
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+    const labels = Object.keys(raw).sort();
+    const values = labels.map(k => raw[k]);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (labels.length === 0) {
+      ctx.fillText("Ingen data endnu", 10, 20);
+      return;
+    }
+
+    const max = Math.max(...values);
+    const med = median(values);
+
+    const left = 40;
+    const bottom = 20;
+    const top = 10;
+    const right = 10;
+
+    const width = canvas.width - left - right;
+    const height = canvas.height - top - bottom;
+
+    // Akser
+    ctx.beginPath();
+    ctx.moveTo(left, top);
+    ctx.lineTo(left, top + height);
+    ctx.lineTo(left + width, top + height);
+    ctx.stroke();
+
+    const step = width / (values.length - 1);
+
+    // Serie
+    ctx.beginPath();
+    values.forEach((v, i) => {
+      const x = left + i * step;
+      const y = top + height - (v / max) * height;
+
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+
+      ctx.fillRect(x - 2, y - 2, 4, 4);
+    });
+    ctx.stroke();
+
+    // Medianlinje
+    const medY = top + height - (med / max) * height;
+    ctx.beginPath();
+    ctx.moveTo(left, medY);
+    ctx.lineTo(left + width, medY);
+    ctx.strokeStyle = "red";
+    ctx.stroke();
+    ctx.strokeStyle = "black";
+
+    // Værdier under punkter
+    ctx.font = "10px sans-serif";
+    values.forEach((v, i) => {
+      const x = left + i * step;
+      const y = top + height + 12;
+      ctx.fillText(v, x - 3, y);
+    });
+  }
+
+  // Kør ved load
+  renderData();
+  drawChart();
+  updateInterpretation();
 </script>
 
-<!-- #endregion -->
+<h2>Forbedringsmodel – kort manual</h2>
+<pre>
+Et seriediagram viser data over tid og bruges til at skelne mellem:
+- Common cause variation (normal variation)
+- Special cause variation (noget er ændret)
+
+Nøgleværktøjer:
+- Medianlinje: stabil reference
+- Runs: antal gange serien krydser medianen
+- Fortolkning:
+  - Få runs → special cause
+  - Mange runs → trend
+  - Normal mængde runs → stabil proces
+</pre>
 
 </body>
 </html>
