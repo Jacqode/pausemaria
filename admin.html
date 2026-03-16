@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>PauseMaria – Strategi & Administration</title>
+    <style>
+        body { font-family: Arial; margin: 20px; line-height: 1.5; }
+        h2 { margin-top: 40px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        td, th { border: 1px solid #ccc; padding: 6px; }
+        th { background: #f3f3f3; }
+    </style>
+</head>
+
+<body>
+
+<h1>Strategi & Administration</h1>
+
+<!-- 1. STRATEGIPROCES -->
+<h2>1. Strategiproces</h2>
+<p>Overordnet ramme for arbejdet med strategi og forbedringer.</p>
+
+<h3>Årshjul</h3>
+<p>Plan for strategiarbejde, trivselstiltag og opfølgning.</p>
+
+
+<!-- 2. STRATEGIANALYSE -->
+<h2>2. Strategianalyse</h2>
+
+<h3>SWOT-analyse</h3>
+<table>
+    <tr><th>Styrker</th><th>Svagheder</th></tr>
+    <tr><td id="swot-strengths"></td><td id="swot-weaknesses"></td></tr>
+    <tr><th>Muligheder</th><th>Trusler</th></tr>
+    <tr><td id="swot-opportunities"></td><td id="swot-threats"></td></tr>
+</table>
+
+
+<!-- 3. STRATEGIUDVIKLING -->
+<h2>3. Strategiudvikling</h2>
+
+<h3>TOWS – input</h3>
+<table>
+    <tr><th>Type</th><th>Navn</th><th>Score</th></tr>
+    <tbody id="tows-input"></tbody>
+</table>
+
+<h3>Eksterne faktorer</h3>
+<table>
+    <tr><th>Faktor</th><th>Type</th></tr>
+    <tbody id="tows-factors"></tbody>
+</table>
+
+<h3>Genererede strategier</h3>
+
+<h4>SO-strategier</h4>
+<ul id="tows-so"></ul>
+
+<h4>WO-strategier</h4>
+<ul id="tows-wo"></ul>
+
+
+<!-- 3b. TEST AF STRATEGI -->
+<h3>Test af strategi mod SWOT</h3>
+<table>
+    <tr>
+        <th>Strategipunkt</th><th>Bruger S</th><th>Kompenserer W</th>
+        <th>Udnytter O</th><th>Beskytter T</th><th>Kommentar</th><th>Værdi</th>
+    </tr>
+    <tbody id="strategy-swot-test"></tbody>
+</table>
+
+<h3>Test mod interessenter</h3>
+<table>
+    <tr>
+        <th>Interessent</th>
+        <th>Strat 1</th><th>Strat 2</th><th>Strat 3</th><th>Strat 4</th><th>Strat 5</th>
+    </tr>
+    <tbody id="strategy-stakeholders"></tbody>
+</table>
+
+<h3>Test mod ressourcer</h3>
+<table>
+    <tr>
+        <th>Ressource</th><th>Har</th><th>Mangler</th><th>Kommentar</th>
+    </tr>
+    <tbody id="strategy-resources"></tbody>
+</table>
+
+
+<!-- 4. IMPLEMENTERINGSFORBEREDELSE -->
+<h2>4. Forberedelse af implementering</h2>
+
+<h3>Formål</h3>
+<p id="impl-purpose"></p>
+
+<h3>Mål</h3>
+<ul id="impl-goals"></ul>
+
+<h3>Milepæle</h3>
+<table>
+    <tr><th>Leverance</th><th>Ansvarlig</th><th>Uge</th></tr>
+    <tbody id="impl-milestones"></tbody>
+</table>
+
+<h3>Scope</h3>
+<p><strong>Inkluderer:</strong></p>
+<ul id="impl-scope-in"></ul>
+
+<p><strong>Inkluderer ikke:</strong></p>
+<ul id="impl-scope-out"></ul>
+
+<h3>Risici</h3>
+<table>
+    <tr><th>Risiko</th><th>Håndtering</th><th>Konsekvens</th><th>Sandsynlighed</th></tr>
+    <tbody id="impl-risks"></tbody>
+</table>
+
+
+<!-- 5. IMPLEMENTERING -->
+<h2>5. Strategiimplementering</h2>
+<p>Herunder PauseMaria – et værktøj til at understøtte pauser og trivsel.</p>
+
+</body>
+</html>
