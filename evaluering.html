@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+  <meta charset="UTF-8">
+  <title>PauseMaria – Evaluering</title>
+
+  <style>
+    body { font-family: Arial; margin: 20px; line-height: 1.5; }
+    h1 { color: blue; margin-top: 40px; }
+    h2 { margin-top: 25px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+    td, th { border: 1px solid #ccc; padding: 8px; }
+    th { background: #f3f3f3; }
+  </style>
+</head>
+
+<body>
+
+<!-- #region 6. EVALUERING -->
+<h1>6. Evaluering af strategi og implementering</h1>
+<p>Herunder analyse af PauseMaria‑data, seriediagram, median, runs og fortolkning.</p>
+
+<h2>Data (antal pauser pr. minut)</h2>
+<ul id="pm-data-list">
+  <!-- Data indsættes dynamisk fra localStorage -->
+</ul>
+
+<h2>Seriediagram (antal pauser pr. minut)</h2>
+<pre id="pm-chart"></pre>
+
+<h2>Fortolkning</h2>
+<p>Median: <span id="pm-median"></span></p>
+<p>Antal runs: <span id="pm-runs"></span></p>
+<p>Fortolkning: <span id="pm-interpretation"></span></p>
+
+<h2>Forbedringsmodel – kort manual</h2>
+<p>
+Et seriediagram viser data over tid og bruges til at skelne mellem:
+</p>
+<ul>
+  <li>Common cause variation (normal variation)</li>
+  <li>Special cause variation (noget er ændret)</li>
+</ul>
+
+<p>Nøgleværktøjer:</p>
+<ul>
+  <li>Medianlinje: stabil reference</li>
+  <li>Runs: antal gange serien krydser medianen</li>
+  <li>Fortolkning:
+    <ul>
+      <li>Få runs → special cause</li>
+      <li>Mange runs → trend</li>
+      <li>Normal mængde runs → stabil proces</li>
+    </ul>
+  </li>
+</ul>
+
+<script>
+// Hent data fra localStorage
+const pmPauser = JSON.parse(localStorage.getItem("pmPauser") || "[]");
+
+// Vis rå data
+const list = document.getElementById("pm-data-list");
+pmPauser.forEach(ts => {
+  const li = document.createElement("li");
+  li.textContent = new Date(ts).toLocaleTimeString("da-DK") + ": 1 pause";
+  list.appendChild(li);
+});
+
+// Beregn median
+function median(values) {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a,b) => a-b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0
+    ? sorted[mid]
+    : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+// Lav seriediagram (simpelt tekstdiagram)
+const chart = document.getElementById("pm-chart");
+chart.textContent = pmPauser.map((v,i) => `${i+1}: ${v}`).join("\n");
+
+// Median
+document.getElementById("pm-median").textContent = median(pmPauser);
+
+// Runs
+function countRuns(values) {
+  if (values.length < 2) return 1;
+  let m = median(values);
+  let runs = 1;
+  for (let i = 1; i < values.length; i++) {
+    if ((values[i] > m) !== (values[i-1] > m)) runs++;
+  }
+  return runs;
+}
+
+const runs = countRuns(pmPauser);
+document.getElementById("pm-runs").textContent = runs;
+
+// Fortolkning
+let interpretation = "Stabil proces uden tegn på special cause.";
+if (runs < 3) interpretation = "Mulig special cause – få runs.";
+if (runs > 10) interpretation = "Trend – mange runs.";
+
+document.getElementById("pm-interpretation").textContent = interpretation;
+</script>
+
+<!-- #endregion -->
+
+</body>
+</html>
