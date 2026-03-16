@@ -44,5 +44,53 @@
   };
 </script>
 
+
+<!-- ⭐ FEED: Seneste 5 aktive venner -->
+<h2>Seneste aktiviteter fra venner</h2>
+<ul id="friend-feed"></ul>
+
+<script>
+async function loadFriendFeed() {
+  try {
+    // TODO: Indsæt din rigtige Worker-URL her
+    const res = await fetch("https://plugandpause-backend.<din-worker-url>/feed");
+    const all = await res.json();
+
+    // 1) Sortér efter tid (nyeste først)
+    all.sort((a, b) => b.timestamp - a.timestamp);
+
+    // 2) Find de seneste 5 aktive venner (én aktivitet per ven)
+    const seen = new Set();
+    const latestFromFriends = [];
+
+    for (const item of all) {
+      if (!seen.has(item.user)) {
+        seen.add(item.user);
+        latestFromFriends.push(item);
+      }
+      if (latestFromFriends.length === 5) break;
+    }
+
+    // 3) Vis feedet
+    const ul = document.getElementById("friend-feed");
+    ul.innerHTML = "";
+
+    latestFromFriends.forEach(item => {
+      const li = document.createElement("li");
+      const t = new Date(item.timestamp).toLocaleTimeString("da-DK");
+      li.textContent = `${item.user} – ${item.activity} (${t})`;
+      ul.appendChild(li);
+    });
+
+  } catch (err) {
+    console.error("Feed fejl:", err);
+  }
+}
+
+// Opdater feed hvert 10. sekund
+loadFriendFeed();
+setInterval(loadFriendFeed, 10000);
+</script>
+
 </body>
 </html>
